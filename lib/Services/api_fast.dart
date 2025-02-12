@@ -13,28 +13,29 @@ class OCRService {
       }
 
       var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
-      request.files.add(
-        http.MultipartFile.fromBytes('file', croppedImage, filename: 'image.jpg')
-      );
+      request.files.add(http.MultipartFile.fromBytes('file', croppedImage,
+          filename: 'image.jpg'));
 
       final response = await request.send().timeout(
-        const Duration(seconds: 30),
-        onTimeout: () => throw OCRException('Connection timeout after 30 seconds'),
-      );
+            const Duration(seconds: 30),
+            onTimeout: () =>
+                throw OCRException('Connection timeout after 30 seconds'),
+          );
 
       if (response.statusCode == 200) {
         final responseData = await response.stream.bytesToString();
         final jsonResponse = json.decode(responseData);
-        
+
         if (!jsonResponse.containsKey('extracted_cleaned_text')) {
-          throw OCRException('Invalid response format: Missing extracted_cleaned_text');
+          throw OCRException(
+              'Invalid response format: Missing extracted_cleaned_text');
         }
-        
+
         final extractedText = jsonResponse['extracted_cleaned_text'] as String;
         if (extractedText.trim().isEmpty) {
           throw OCRException('No text found in image');
         }
-        
+
         log('Successfully extracted text: $extractedText');
         return extractedText;
       } else {
@@ -62,9 +63,7 @@ class OCRService {
 class OCRException implements Exception {
   final String message;
   OCRException(this.message);
-  
+
   @override
   String toString() => message;
 }
-
-
